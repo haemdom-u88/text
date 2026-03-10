@@ -1,0 +1,53 @@
+# 阿里云通义千问API配置
+qwen_api:
+  # 兼容模式v1地址
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  
+  # API密钥（你的）
+  api_key: "YOUR_API_KEY_HERE"
+  
+  # 可用模型（通义千问系列）
+  models:
+    qwen_max: "qwen-max"           # 最强模型
+    qwen_plus: "qwen-plus"         # 高性价比
+    qwen_turbo: "qwen-turbo"       # 快速版本
+    qwen_long: "qwen-long"         # 长文本版本
+  
+  # 默认参数
+  default_params:
+    temperature: 0.3
+    max_tokens: 2000
+    timeout: 60
+    stream: false
+
+# 提示词模板（保持不变）
+prompts:
+  entity_extraction: |
+    你是一个知识图谱构建专家。请从以下文本中提取所有重要的实体和关系。
+    
+    文本：
+    {text}
+    
+    请按照以下JSON格式返回结果：
+    {
+      "entities": [
+        {"name": "实体名称", "type": "实体类型", "description": "简要描述"}
+      ],
+      "relations": [
+        {"subject": "主体", "relation": "关系类型", "object": "客体"}
+      ]
+    }
+    
+    实体类型包括：人物、地点、组织、产品、概念、事件、时间。
+    关系类型包括：是、位于、创立、生产、属于、参与、发生于。
+    
+    请确保：
+    1. 只提取文本中明确提到的信息
+    2. 实体名称要准确完整
+    3. 关系要基于文本事实
+
+# 项目配置
+project:
+  name: "基于LLM的知识图谱构建系统"
+  version: "2.0"
+  description: "毕业设计项目"

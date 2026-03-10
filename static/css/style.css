@@ -1,0 +1,94 @@
+/* 主题变量 */
+:root {
+  --brand-prim: #2b6cb0;
+  --brand-sec: #22c55e;
+  --brand-warn: #f59e0b;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --bg-soft: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e5e7eb;
+  --shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --bg-soft: #0b1220;
+  --card-bg: #0f172a;
+  --border: #1f2937;
+  --shadow: 0 10px 25px rgba(0,0,0,0.35);
+}
+
+/* 全局基础样式 */
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--text-main);
+  background: radial-gradient(1200px 600px at 20% -100%, #dbeafe 0%, transparent 70%),
+              radial-gradient(800px 500px at 100% 0%, #fef3c7 0%, transparent 60%),
+              var(--bg-soft);
+  min-height: 100vh;
+}
+h1 { color: var(--brand-prim); }
+p { color: var(--text-muted); }
+
+/* 模式切换按钮激活样式 */
+.btn-group .btn.active {
+  box-shadow: 0 0 0 2px rgba(43,108,176,0.2);
+  border-width: 2px;
+  background: linear-gradient(90deg, #e3f0ff 0%, #f8faff 100%);
+}
+
+/* 模式面板基础样式 */
+.mode-panel { display: none; }
+.mode-panel:target, .mode-panel.active, .mode-panel[style*="display: block"] { display: block !important; }
+
+/* 布局微调与可读性提升 */
+.navbar-brand { font-weight: 700; letter-spacing: .2px; }
+.container-fluid { max-width: 1400px; }
+.hero {
+  background: linear-gradient(135deg, #eef6ff 0%, #fafafa 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px 28px;
+}
+.hero .title { font-size: 1.65rem; font-weight: 700; }
+.hero .subtitle { color: var(--text-muted); }
+
+.card { border-radius: 14px; border: 1px solid var(--border); background: var(--card-bg); box-shadow: var(--shadow); }
+.card-header { border-bottom: 1px solid var(--border); }
+.card-header h4, .card-header h5 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.form-text { color: var(--text-muted); }
+.nav-tabs { border-bottom: 1px solid var(--border); }
+.nav-tabs .nav-link { border: none; color: var(--text-muted); }
+.nav-tabs .nav-link.active { font-weight: 600; color: var(--text-main); background: transparent; border-bottom: 2px solid var(--brand-prim); }
+.progress { height: 10px; }
+
+/* 图谱容器样式 */
+#graph-container {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: radial-gradient(400px 200px at 10% 0%, #f1f5f9 0%, transparent 60%), var(--card-bg);
+}
+
+/* 数据卡片数字更醒目 */
+#entity-count, #relation-count { font-size: 2.25rem; line-height: 1; }
+
+/* 表格样式优化 */
+.table thead th { border-bottom: 2px solid var(--border); }
+.table-hover tbody tr:hover { background: rgba(59,130,246,0.06); }
+
+/* JSON 输出区域 */
+#json-output { background: #0b1220; color: #cbd5e1; border-color: #1f2937; border-radius: 12px; }
+
+/* 辅助按钮样式 */
+.btn-outline-secondary, .btn-outline-primary { backdrop-filter: saturate(1.2); }
+.btn-outline-info { border-color: #0ea5e9; color: #0284c7; }
+.btn-outline-info:hover { background: #e0f2fe; }
+
+/* 模态框标题微调 */
+.modal-title { font-weight: 700; }
+
+/* 页脚样式 */
+.app-footer { color: var(--text-muted); font-size: .9rem; }

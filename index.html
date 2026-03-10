@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本知识图谱构建系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260215">
+        <!-- 使用本地 echarts，避免网络超时导致图谱不可用 -->
+        <script src="/assets/echarts.min.js?v=full"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+</head>
+<body>
+    <!-- Toast 容器 -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toast-container" style="z-index: 1200;"></div>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-project-diagram"></i> 知识图谱构建系统
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#examples-section"><i class="fas fa-book"></i> 示例</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#results-section"><i class="fas fa-chart-bar"></i> 结果</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="navbar-text">
+                        <span id="status-indicator" class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> 系统就绪
+                        </span>
+                    </div>
+                    <button id="theme-toggle" class="btn btn-sm btn-outline-light" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 顶部横幅（提升气质） -->
+    <div class="container-fluid mt-4">
+      <div class="hero">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <div class="title"><i class="fas fa-sparkles"></i> 智能文档知识图谱分析系统</div>
+            <div class="subtitle mt-1">高效抽取实体与关系，支持多文档统一分析与智能问答。</div>
+          </div>
+          <div class="text-end">
+            <a href="#panel-single" class="btn btn-primary me-2"><i class="fas fa-file-alt"></i> 单文档分析</a>
+            <a href="#panel-multi" class="btn btn-success me-2"><i class="fas fa-copy"></i> 多文档分析</a>
+            <a href="#panel-qa" class="btn btn-warning"><i class="fas fa-comments"></i> 问答</a>
+                        <button id="btn-demo-run" class="btn btn-outline-info ms-2"><i class="fas fa-play"></i> 一键演示</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 智能文档知识图谱分析系统 - 模式选择与主面板 -->
+    <div class="container-fluid mt-4">
+        <!-- 模式选择区 -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <div class="btn-group btn-group-lg" role="group" aria-label="模式选择">
+                    <button class="btn btn-outline-primary" id="mode-single" data-mode="single"><i class="fas fa-file-alt"></i> 单文档深度分析</button>
+                    <button class="btn btn-outline-success" id="mode-multi" data-mode="multi"><i class="fas fa-copy"></i> 多文档统一分析</button>
+                    <button class="btn btn-outline-warning" id="mode-qa" data-mode="qa"><i class="fas fa-comments"></i> 智能问答</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 单文档深度分析模式面板 -->
+        <div id="panel-single" class="mode-panel active">
+            <div class="row">
+                <div class="col-lg-6">
+                    <!-- 文本输入与示例区（复用原有结构） -->
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0"><i class="fas fa-keyboard"></i> 文本输入</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">输入要分析的文本（支持中文、英文）</label>
+                                <textarea id="input-text" class="form-control" rows="12" 
+                                          placeholder="请输入文本内容，例如：&#10;苹果公司由史蒂夫·乔布斯、史蒂夫·沃兹尼亚克和罗纳德·韦恩于1976年创立，总部位于加利福尼亚州库比蒂诺。公司主要产品包括iPhone、iPad、Mac等。"></textarea>
+                                <div class="form-text">
+                                    <span id="char-count">0</span> 字符 | 最多10000字符
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button id="btn-clear" class="btn btn-outline-secondary me-2">
+                                    <i class="fas fa-eraser"></i> 清空
+                                </button>
+                                <button id="btn-example" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-magic"></i> 加载示例
+                                </button>
+                                <button id="btn-extract" class="btn btn-success me-2">
+                                    <i class="fas fa-play"></i> 构建知识图谱
+                                </button>
+                                <button id="btn-export-report" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-export"></i> 导出分析报告
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 示例区域 -->
+                    <div class="card shadow mt-4" id="examples-section">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-lightbulb"></i> 示例文本</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="examples-container">
+                                <!-- 示例将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6" id="results-section">
+                    <!-- 图谱可视化与分析结果（复用原有结构） -->
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0"><i class="fas fa-project-diagram"></i> 知识图谱可视化</h4>
+                        </div>
+                        <div class="card-body">
+                            <div id="graph-container" style="height: 500px;"></div>
+                            <div class="text-center mt-3">
+                                <button id="btn-reset-view" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-sync-alt"></i> 重置视图
+                                </button>
+                                <button id="btn-export-graph" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="fas fa-download"></i> 导出图谱
+                                </button>
+                                <button id="btn-ai-expand-node" class="btn btn-sm btn-outline-success ms-2">
+                                    <i class="fas fa-seedling"></i> AI展开选中节点
+                                </button>
+                                <button id="btn-ai-infer-edge" class="btn btn-sm btn-outline-warning ms-2">
+                                    <i class="fas fa-link"></i> AI补全所选两个节点关系
+                                </button>
+                                <button id="btn-save-graph" class="btn btn-sm btn-outline-dark ms-2">
+                                    <i class="fas fa-database"></i> 保存当前图谱
+                                </button>
+                                <div class="mt-2 small text-muted" id="selection-status">未选择节点</div>
+                                <div class="mt-1 small text-muted" id="save-status">最近保存/入库：暂无</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card shadow mt-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie"></i> 分析结果</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h2 id="entity-count" class="text-primary">0</h2>
+                                            <p class="card-text">识别实体</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light mb-3">
+                                        <div class="card-body text-center">
+                                            <h2 id="relation-count" class="text-success">0</h2>
+                                            <p class="card-text">发现关系</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h6><i class="fas fa-tags"></i> 实体分类</h6>
+                                <div id="entities-by-type" class="mt-2">
+                                    <!-- 实体分类将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 详细结果面板（复用原有结构） -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white">
+                            <ul class="nav nav-tabs card-header-tabs" id="results-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="entities-tab" data-bs-toggle="tab" data-bs-target="#entities-panel">
+                                        <i class="fas fa-list"></i> 实体列表
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="relations-tab" data-bs-toggle="tab" data-bs-target="#relations-panel">
+                                        <i class="fas fa-link"></i> 关系列表
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="json-tab" data-bs-toggle="tab" data-bs-target="#json-panel">
+                                        <i class="fas fa-code"></i> JSON数据
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="results-tab-content">
+                                <div class="tab-pane fade show active" id="entities-panel">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>实体名称</th>
+                                                <th>类型</th>
+                                                <th>ID</th>
+                                                <th>置信度</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="entities-table">
+                                            <!-- 实体数据将通过JavaScript动态填充 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tab-pane fade" id="relations-panel">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>主体</th>
+                                                <th>关系</th>
+                                                <th>客体</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="relations-table">
+                                            <!-- 关系数据将通过JavaScript动态填充 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tab-pane fade" id="json-panel">
+                                    <div class="mb-3 d-flex justify-content-end">
+                                        <button id="btn-copy-json" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-copy"></i> 复制JSON
+                                        </button>
+                                        <button id="btn-export-json" class="btn btn-sm btn-outline-primary ms-2">
+                                            <i class="fas fa-file-export"></i> 导出文件
+                                        </button>
+                                    </div>
+                                    <pre id="json-output" class="bg-light p-3 border rounded" style="max-height: 400px; overflow: auto;">
+                                        {/* JSON数据将在这里显示 */}
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 多文档统一分析模式面板 -->
+        <div id="panel-multi" class="mode-panel" style="display:none;">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-copy"></i> 多文档统一分析</h4>
+                    <button id="btn-multi-export-merged" class="btn btn-sm btn-outline-light" title="导出合并结果 JSON">
+                        <i class="fas fa-file-export"></i> 导出合并JSON
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">上传多个相关文档（支持PDF、Word、TXT等）</label>
+                        <input type="file" id="multi-file-input" class="form-control" multiple accept=".pdf,.doc,.docx,.txt">
+                        <div class="form-text" id="multi-file-hint">已选择 0 个文件</div>
+                        <div id="multi-file-list" class="small text-muted mt-1"></div>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div id="multi-upload-bar" class="progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div id="multi-upload-text" class="small text-muted mt-1">上传进度：0%</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button id="btn-multi-analyze" class="btn btn-success me-2">
+                            <i class="fas fa-play"></i> 入队并自动轮询
+                        </button>
+                        <button id="btn-multi-enqueue" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-list"></i> 仅入队
+                        </button>
+                        <button id="btn-multi-check" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-sync"></i> 查询队列
+                        </button>
+                        <button id="btn-multi-clear" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-eraser"></i> 清空选择
+                        </button>
+                        <button id="btn-multi-export-report" class="btn btn-outline-primary">
+                            <i class="fas fa-file-export"></i> 导出分析报告
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="multi-analysis-results"></div>
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <div id="multi-queue-status" class="text-muted small">队列状态：暂无</div>
+                <button id="btn-multi-download" class="btn btn-sm btn-outline-secondary" disabled>
+                    <i class="fas fa-download"></i> 下载队列结果
+                </button>
+            </div>
+            <div class="mt-2">
+                <div class="progress" style="height: 6px;">
+                    <div id="multi-queue-bar" class="progress-bar bg-info" style="width: 0%"></div>
+                </div>
+                <div id="multi-queue-text" class="small text-muted mt-1">队列进度：0%</div>
+            </div>
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>文件</th>
+                            <th>状态</th>
+                            <th>节点</th>
+                            <th>边</th>
+                            <th>信息</th>
+                        </tr>
+                    </thead>
+                    <tbody id="multi-per-file">
+                        <tr><td colspan="5" class="text-muted">尚无结果</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 智能问答模式面板 -->
+        <div id="panel-qa" class="mode-panel" style="display:none;">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-comments"></i> 智能问答</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">请输入您的问题（基于知识库）</label>
+                        <input type="text" id="qa-input" class="form-control" placeholder="如：苹果公司创始人有哪些？">
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button id="btn-qa-ask" class="btn btn-warning">
+                            <i class="fas fa-paper-plane"></i> 提问
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="qa-results">
+                <!-- 问答结果区，后续JS填充 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载模态框 -->
+    <div class="modal fade" id="loading-modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">处理中</h5>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p class="mt-3" id="loading-message">正在抽取文本信息并构建知识图谱，请稍候...</p>
+                    <div class="progress mt-3">
+                        <div id="loading-progress" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+        <!-- 主题切换（小脚本，无侵入） -->
+        <script>
+            (function(){
+                try {
+                    var saved = localStorage.getItem('theme');
+                    if (saved) document.documentElement.setAttribute('data-theme', saved);
+                } catch(e) {}
+                var btn = document.getElementById('theme-toggle');
+                if (btn) {
+                    btn.addEventListener('click', function(){
+                        var cur = document.documentElement.getAttribute('data-theme');
+                        var next = cur === 'dark' ? '' : 'dark';
+                        if (next) document.documentElement.setAttribute('data-theme', next); else document.documentElement.removeAttribute('data-theme');
+                        try { localStorage.setItem('theme', next); } catch(e) {}
+                        btn.innerHTML = next === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+                    });
+                }
+            })();
+        </script>
+        <!-- 自定义JS -->
+        <script src="/static/js/main.js?v=20260215"></script>
+                <script>
+                    // 简易一键演示：加载样本 → 单文档抽取 → 批量模拟上传 → 子图读取
+                    (function(){
+                        const btn = document.getElementById('btn-demo-run');
+                        if (!btn) return;
+                        const notifySafe = (msg, type) => (window.notify ? window.notify(msg, type) : alert(msg));
+                        const setStatusSafe = (msg, type) => (window.setStatus ? window.setStatus(msg, type) : null);
+                        const clickIfExists = (id) => {
+                            const el = document.getElementById(id);
+                            if (el) el.click();
+                        };
+                        btn.addEventListener('click', async function(){
+                            try {
+                                clickIfExists('mode-single');
+                                setStatusSafe('演示：加载样本', 'info');
+                                // 1) 加载样本文本
+                                const r = await fetch('/api/sample_text');
+                                const js = await r.json();
+                                if (!js || !js.success) { notifySafe('未能加载样本文本', 'danger'); return; }
+                                const text = js.text || '';
+                                const input = document.getElementById('input-text');
+                                if (input) {
+                                    input.value = text;
+                                    const cc = document.getElementById('char-count');
+                                    if (cc) cc.textContent = text.length;
+                                }
+
+                                setStatusSafe('演示：单文档抽取', 'info');
+                                const extRes = await fetch('/api/extract', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+                                const extJs = await extRes.json();
+                                if (!extJs || !extJs.success) { notifySafe('样本抽取失败', 'danger'); return; }
+                                const data = extJs.data || {};
+                                const extracted = data.extracted || {};
+                                const graph = data.graph || { nodes:[], edges:[] };
+                                if (window.appState) window.appState.lastAnalysis = data;
+
+                                const et = document.getElementById('entities-table');
+                                const rt = document.getElementById('relations-table');
+                                if (et) {
+                                    et.innerHTML = '';
+                                    (extracted.entities || []).forEach((e,i)=>{
+                                        const tr=document.createElement('tr');
+                                        tr.innerHTML = `<td>${e.name||''}</td><td>${e.type||''}</td><td>${e.id||i}</td><td>${e.score||''}</td>`;
+                                        et.appendChild(tr);
+                                    });
+                                }
+                                if (rt) {
+                                    rt.innerHTML = '';
+                                    (extracted.relations || []).forEach(rel=>{
+                                        const tr=document.createElement('tr');
+                                        tr.innerHTML = `<td>${rel.subject||''}</td><td>${rel.relation||''}</td><td>${rel.object||''}</td>`;
+                                        rt.appendChild(tr);
+                                    });
+                                }
+                                const jo = document.getElementById('json-output');
+                                if (jo) jo.textContent = JSON.stringify({ extracted, graph }, null, 2);
+                                if (window.renderGraph) window.renderGraph(graph);
+
+                                // 2) 批量模拟上传（用两个虚拟文件）
+                                if (!window.File) {
+                                    notifySafe('当前浏览器不支持批量演示 File API，已跳过批量步骤', 'warning');
+                                } else {
+                                    setStatusSafe('演示：批量抽取', 'info');
+                                    const fd = new FormData();
+                                    const f1 = new File([text], 'sample1.txt', { type: 'text/plain' });
+                                    const f2 = new File([text], 'sample2.txt', { type: 'text/plain' });
+                                    fd.append('files', f1);
+                                    fd.append('files', f2);
+                                    const bRes = await fetch('/api/batch_extract', { method: 'POST', body: fd });
+                                    const bJs = await bRes.json();
+                                    if (bJs && bJs.success) {
+                                        const merged = (bJs.merged) || { nodes:[], edges:[] };
+                                        const g2 = (bJs.graph) || { nodes:[], edges:[] };
+                                        const stats = bJs.stats || {};
+                                        const per = bJs.per_file || [];
+                                        const perBody = document.getElementById('multi-per-file');
+                                        const resBox = document.getElementById('multi-analysis-results');
+                                        if (resBox) resBox.innerHTML = `<div class="alert alert-success">批量已处理 ${stats.processed||2} 个文件，节点 ${stats.nodes||merged.nodes.length}，边 ${stats.edges||merged.edges.length}</div>`;
+                                        if (perBody) {
+                                            perBody.innerHTML = '';
+                                            per.forEach(item=>{
+                                                const tr=document.createElement('tr');
+                                                const badge=item.success?'success':'danger';
+                                                const status=item.success?'成功':'失败';
+                                                tr.innerHTML = `<td>${item.filename||''}</td><td><span class="badge bg-${badge}">${status}</span></td><td>${item.nodes??'-'}</td><td>${item.edges??'-'}</td><td>${item.error||''}</td>`;
+                                                perBody.appendChild(tr);
+                                            });
+                                        }
+                                        if (window.renderGraph) window.renderGraph(g2);
+                                        const ec = document.getElementById('entity-count');
+                                        const rc = document.getElementById('relation-count');
+                                        ec && (ec.textContent = (merged.nodes||[]).length);
+                                        rc && (rc.textContent = (merged.edges||[]).length);
+                                        clickIfExists('mode-multi');
+                                    }
+                                }
+
+                                // 3) 读取 Neo4j 子图（以首个节点为中心）
+                                setStatusSafe('演示：Neo4j 子图读取', 'info');
+                                const center = (graph.nodes && graph.nodes[0] && (graph.nodes[0].name || graph.nodes[0].id)) || '';
+                                const centerInput = document.getElementById('neo4j-center');
+                                if (centerInput) centerInput.value = center;
+                                const params = new URLSearchParams();
+                                if (center) params.append('center', center);
+                                params.append('depth','1');
+                                params.append('limit_nodes','200');
+                                params.append('limit_edges','800');
+                                params.append('include_props','1');
+                                const nRes = await fetch('/api/neo4j/subgraph?' + params.toString());
+                                const nJs = await nRes.json();
+                                if (nJs && nJs.success) {
+                                    const g3 = { nodes: nJs.nodes||[], edges: nJs.edges||[] };
+                                    if (window.renderGraph) window.renderGraph(g3);
+                                } else {
+                                    notifySafe('Neo4j 子图读取失败', 'warning');
+                                }
+                                clickIfExists('mode-multi');
+                                setStatusSafe('演示完成', 'success');
+                                notifySafe('演示完成', 'success');
+                            } catch(e) {
+                                notifySafe('演示过程出错：' + (e && e.message ? e.message : e), 'danger');
+                                setStatusSafe('演示失败', 'danger');
+                            }
+                        });
+                    })();
+                </script>
+
+        <!-- 页脚（版权与版本） -->
+        <footer class="container-fluid py-4 mt-5 app-footer">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <span>© 2026 文本知识图谱构建系统</span>
+                <span>v1.0 • 由 Flask + ECharts 驱动</span>
+            </div>
+        </footer>
+</body>
+</html>

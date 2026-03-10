@@ -1,0 +1,11 @@
+requests>=2.31.0
+Flask>=2.3.0
+Flask-CORS>=4.0.0
+python-dotenv>=1.0.0
+PyYAML>=6.0
+networkx>=3.1
+matplotlib>=3.7.2
+pdfplumber>=0.11.0
+python-docx>=1.1.0
+neo4j>=5.17.0
+reportlab>=4.2.0

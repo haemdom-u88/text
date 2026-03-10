@@ -1,0 +1,156 @@
+{
+  "entities": [
+    {
+      "name": "苹果公司",
+      "type": "组织",
+      "description": "一家美国跨国科技公司"
+    },
+    {
+      "name": "Apple Inc.",
+      "type": "组织",
+      "description": "苹果公司的英文名称"
+    },
+    {
+      "name": "美国",
+      "type": "地点",
+      "description": "苹果公司的国家"
+    },
+    {
+      "name": "加利福尼亚州",
+      "type": "地点",
+      "description": "苹果公司的所在地"
+    },
+    {
+      "name": "库比蒂诺",
+      "type": "地点",
+      "description": "苹果公司的总部所在城市"
+    },
+    {
+      "name": "史蒂夫·乔布斯",
+      "type": "人物",
+      "description": "苹果公司的联合创始人"
+    },
+    {
+      "name": "史蒂夫·沃兹尼亚克",
+      "type": "人物",
+      "description": "苹果公司的联合创始人"
+    },
+    {
+      "name": "罗纳德·韦恩",
+      "type": "人物",
+      "description": "苹果公司的联合创始人"
+    },
+    {
+      "name": "1976年4月1日",
+      "type": "时间",
+      "description": "苹果公司的创立日期"
+    },
+    {
+      "name": "iPhone智能手机",
+      "type": "产品",
+      "description": "苹果公司的主要产品之一"
+    },
+    {
+      "name": "Mac个人电脑",
+      "type": "产品",
+      "description": "苹果公司的主要产品之一"
+    },
+    {
+      "name": "iPad平板电脑",
+      "type": "产品",
+      "description": "苹果公司的主要产品之一"
+    },
+    {
+      "name": "Apple Watch智能手表",
+      "type": "产品",
+      "description": "苹果公司的主要产品之一"
+    },
+    {
+      "name": "AirPods无线耳机",
+      "type": "产品",
+      "description": "苹果公司的主要产品之一"
+    },
+    {
+      "name": "蒂姆·库克",
+      "type": "人物",
+      "description": "苹果公司的现任首席执行官"
+    },
+    {
+      "name": "Apple Store",
+      "type": "概念",
+      "description": "苹果公司的全球零售店"
+    }
+  ],
+  "relations": [
+    {
+      "subject": "苹果公司",
+      "relation": "是",
+      "object": "Apple Inc."
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "位于",
+      "object": "加利福尼亚州"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "位于",
+      "object": "库比蒂诺"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "创立",
+      "object": "史蒂夫·乔布斯"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "创立",
+      "object": "史蒂夫·沃兹尼亚克"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "创立",
+      "object": "罗纳德·韦恩"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "创立",
+      "object": "1976年4月1日"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "生产",
+      "object": "iPhone智能手机"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "生产",
+      "object": "Mac个人电脑"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "生产",
+      "object": "iPad平板电脑"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "生产",
+      "object": "Apple Watch智能手表"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "生产",
+      "object": "AirPods无线耳机"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "属于",
+      "object": "蒂姆·库克"
+    },
+    {
+      "subject": "苹果公司",
+      "relation": "拥有",
+      "object": "Apple Store"
+    }
+  ]
+}

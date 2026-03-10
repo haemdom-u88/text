@@ -1,0 +1,169 @@
+/* 主样式 */
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* 卡片样式 */
+.card {
+    border: none;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-weight: 600;
+}
+
+/* 输入框样式 */
+#input-text {
+    resize: vertical;
+    font-size: 15px;
+    line-height: 1.6;
+    border: 2px solid #e0e0e0;
+    transition: border-color 0.3s ease;
+}
+
+#input-text:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+/* 按钮样式 */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--secondary-color), #27ae60);
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+}
+
+/* 图表容器 */
+#graph-container {
+    width: 100%;
+    min-height: 500px;
+    border-radius: 8px;
+    background: white;
+}
+
+/* 实体标签 */
+.entity-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 3px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.entity-badge:hover {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+/* 表格样式 */
+.table {
+    font-size: 14px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* 加载动画 */
+.spinner-border {
+    animation-duration: 1.5s;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    border-radius: 4px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    #graph-container {
+        height: 400px !important;
+    }
+}
+
+/* 导航栏指示器 */
+#status-indicator {
+    font-size: 12px;
+    padding: 5px 10px;
+}
+
+/* 示例卡片 */
+.example-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    height: 100%;
+}
+
+.example-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.example-content {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 14px;
+    color: #666;
+}
+
+/* JSON预览 */
+#json-output {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    background: #f8f9fa;
+}
+
+/* 统计卡片 */
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+}
+
+.stat-card h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+}

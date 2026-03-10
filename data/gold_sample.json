@@ -1,0 +1,13 @@
+{
+  "entities": [
+    {"id": "linear_algebra", "name": "线性代数", "type": "Concept"},
+    {"id": "pca", "name": "主成分分析", "type": "Concept"},
+    {"id": "matrix", "name": "矩阵", "type": "Concept"},
+    {"id": "eigenvalue", "name": "特征值", "type": "Concept"}
+  ],
+  "relations": [
+    {"source": "matrix", "target": "linear_algebra", "relation": "SUBTOPIC_OF"},
+    {"source": "eigenvalue", "target": "linear_algebra", "relation": "SUBTOPIC_OF"},
+    {"source": "linear_algebra", "target": "pca", "relation": "PREREQUISITE_OF"}
+  ]
+}
