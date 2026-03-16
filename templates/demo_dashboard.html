@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基于LLM的智能知识图谱构建系统 - 大屏演示</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            grid-template-rows: 1fr;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .center-panel {
+            position: relative;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .text-flow {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .json-display {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .graph-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .flow-diagram {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-top: auto;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .node-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div>🧠 基于LLM的智能知识图谱构建系统 - 实时演示</div>
+        <div id="status-info">正在处理文档...</div>
+    </div>
+
+    <div class="container">
+        <!-- 左侧面板：源文剥离区 -->
+        <div class="left-panel">
+            <div class="panel">
+                <div class="panel-title">📄 源文剥离区</div>
+                <div class="text-flow" id="source-text">
+                    非结构化文本数据池正在加载...<br>
+                    包含实体识别、关系抽取、知识融合等复杂任务...<br>
+                    大语言模型将从海量文本中提炼结构化知识...
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">🔄 处理流程</div>
+                <div class="flow-diagram" id="flow-diagram"></div>
+            </div>
+        </div>
+
+        <!-- 中间面板：主视觉区 -->
+        <div class="center-panel">
+            <div class="panel" style="height: 100%;">
+                <div class="panel-title">🌌 动态力导向图</div>
+                <div class="graph-container" id="main-graph"></div>
+                <div class="node-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FF6B6B;"></div>
+                        <span>人物</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #4ECDC4;"></div>
+                        <span>组织</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #45B7D1;"></div>
+                        <span>地点</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #96CEB4;"></div>
+                        <span>事件</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧面板：解析结果区 -->
+        <div class="right-panel">
+            <div class="panel">
+                <div class="panel-title">⚙️ 解析结果区</div>
+                <div class="json-display" id="json-result">
+                    {<br>
+                    &nbsp;&nbsp;"entities": [<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;{"name": "示例实体", "type": "PERSON"},<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+                    &nbsp;&nbsp;],<br>
+                    &nbsp;&nbsp;"relations": [<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;{"source": "A", "target": "B", "relation": "相关"},<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+                    &nbsp;&nbsp;]<br>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        let graphData = {
+            nodes: [],
+            links: []
+        };
+
+        let sourceText = `在人工智能领域，大语言模型如GPT和Qwen正在改变知识处理的方式。
+        这些模型能够从海量文本中提取实体和关系，构建知识图谱。
+        例如，"张三"是"工程师"，"在北京工作"，这些信息可以被结构化存储。
+        知识图谱不仅包含实体，还包含它们之间的复杂关系网络。`;
+
+        let jsonResult = `{
+  "entities": [
+    {"name": "GPT", "type": "PRODUCT", "confidence": 0.95},
+    {"name": "Qwen", "type": "PRODUCT", "confidence": 0.92},
+    {"name": "张三", "type": "PERSON", "confidence": 0.88},
+    {"name": "北京", "type": "LOCATION", "confidence": 0.96}
+  ],
+  "relations": [
+    {"source": "GPT", "target": "人工智能", "relation": "属于领域", "confidence": 0.85},
+    {"source": "Qwen", "target": "大语言模型", "relation": "是类型", "confidence": 0.90},
+    {"source": "张三", "target": "工程师", "relation": "职业是", "confidence": 0.82},
+    {"source": "张三", "target": "北京", "relation": "工作地点", "confidence": 0.78}
+  ]
+}`;
+
+        // 初始化图表
+        const chart = echarts.init(document.getElementById('main-graph'));
+
+        // 流程图
+        const flowChart = echarts.init(document.getElementById('flow-diagram'));
+        const flowOption = {
+            xAxis: { type: 'category', show: false },
+            yAxis: { type: 'category', show: false },
+            series: [{
+                type: 'graph',
+                layout: 'none',
+                symbolSize: 50,
+                roam: false,
+                label: { show: true, fontSize: 10 },
+                edgeSymbol: ['circle', 'arrow'],
+                edgeSymbolSize: [4, 10],
+                data: [
+                    { name: '数据输入', x: 50, y: 50, itemStyle: { color: '#4CAF50' } },
+                    { name: 'Prompt注入', x: 150, y: 50, itemStyle: { color: '#2196F3' } },
+                    { name: 'LLM抽取', x: 250, y: 50, itemStyle: { color: '#FF9800' } },
+                    { name: '清洗校验', x: 350, y: 50, itemStyle: { color: '#9C27B0' } },
+                    { name: 'Neo4j存储', x: 450, y: 50, itemStyle: { color: '#607D8B' } }
+                ],
+                links: [
+                    { source: '数据输入', target: 'Prompt注入' },
+                    { source: 'Prompt注入', target: 'LLM抽取' },
+                    { source: 'LLM抽取', target: '清洗校验' },
+                    { source: '清洗校验', target: 'Neo4j存储' }
+                ]
+            }]
+        };
+        flowChart.setOption(flowOption);
+
+        // 动态添加节点和边
+        function addNode(name, type, x, y) {
+            const colors = {
+                'PERSON': '#FF6B6B',
+                'LOCATION': '#4ECDC4',
+                'PRODUCT': '#45B7D1',
+                'EVENT': '#96CEB4'
+            };
+
+            graphData.nodes.push({
+                name: name,
+                x: x,
+                y: y,
+                symbolSize: Math.random() * 30 + 20,
+                itemStyle: {
+                    color: colors[type] || '#95A5A6',
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    shadowBlur: 10,
+                    shadowColor: colors[type] || '#95A5A6'
+                },
+                label: { show: true, fontSize: 12, color: '#fff' },
+                animationDelay: Math.random() * 1000
+            });
+        }
+
+        function addLink(source, target, relation) {
+            graphData.links.push({
+                source: source,
+                target: target,
+                lineStyle: {
+                    color: '#fff',
+                    width: 2,
+                    curveness: 0.2,
+                    opacity: 0.8
+                },
+                animation: true
+            });
+        }
+
+        // 模拟实时构建过程
+        let step = 0;
+        const steps = [
+            { action: 'addNode', params: ['GPT', 'PRODUCT', 300, 200] },
+            { action: 'addNode', params: ['Qwen', 'PRODUCT', 500, 300] },
+            { action: 'addNode', params: ['张三', 'PERSON', 200, 400] },
+            { action: 'addNode', params: ['北京', 'LOCATION', 400, 400] },
+            { action: 'addLink', params: ['GPT', 'Qwen'] },
+            { action: 'addLink', params: ['张三', '北京'] },
+            { action: 'addNode', params: ['人工智能', 'CONCEPT', 350, 100] },
+            { action: 'addLink', params: ['GPT', '人工智能'] }
+        ];
+
+        function updateGraph() {
+            const option = {
+                series: [{
+                    type: 'graph',
+                    layout: 'none',
+                    animationDuration: 1500,
+                    animationEasingUpdate: 'quinticInOut',
+                    data: graphData.nodes,
+                    links: graphData.links,
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    emphasis: {
+                        focus: 'adjacency',
+                        lineStyle: { width: 10 }
+                    }
+                }]
+            };
+            chart.setOption(option, true);
+        }
+
+        function simulateProcess() {
+            if (step < steps.length) {
+                const currentStep = steps[step];
+                if (currentStep.action === 'addNode') {
+                    addNode(...currentStep.params);
+                } else if (currentStep.action === 'addLink') {
+                    addLink(...currentStep.params);
+                }
+                updateGraph();
+                step++;
+
+                // 更新状态
+                document.getElementById('status-info').textContent =
+                    `已处理 ${step}/${steps.length} 个元素`;
+
+                setTimeout(simulateProcess, 2000);
+            } else {
+                document.getElementById('status-info').textContent = '图谱构建完成 ✓';
+            }
+        }
+
+        // 启动模拟
+        setTimeout(() => {
+            simulateProcess();
+        }, 1000);
+
+        // 填充文本区域
+        document.getElementById('source-text').innerHTML = sourceText.replace(/\n/g, '<br>');
+        document.getElementById('json-result').innerHTML = jsonResult.replace(/ /g, '&nbsp;').replace(/\n/g, '<br>');
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            chart.resize();
+            flowChart.resize();
+        });
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">d:\viscodeproject\text\templates\demo_dashboard.html

@@ -38,6 +38,6 @@ def serve_static(filename):
     return send_from_directory("static", filename)
 
 
-@bp.route("/favicon.ico")
-def favicon():
-    return send_from_directory(os.path.join("static"), "favicon.ico")
+@bp.route("/dashboard")
+def dashboard():
+    return render_template("demo_dashboard.html")

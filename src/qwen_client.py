@@ -2,21 +2,46 @@
 """
 阿里云通义千问API客户端
 改进：使用环境变量读取API Key和Base URL，使用requests.Session并添加重试机制。
+添加Token Bucket流控和指数退避重试。
 """
 import os
 import json
 import time
+import threading
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
+class TokenBucket:
+    """Token Bucket for rate limiting"""
+    def __init__(self, rate, capacity):
+        self.rate = rate  # tokens per second
+        self.capacity = capacity
+        self.tokens = capacity
+        self.last_update = time.time()
+        self.lock = threading.Lock()
+
+    def consume(self, tokens=1):
+        with self.lock:
+            now = time.time()
+            elapsed = now - self.last_update
+            self.tokens = min(self.capacity, self.tokens + elapsed * self.rate)
+            self.last_update = now
+
+            if self.tokens >= tokens:
+                self.tokens -= tokens
+                return True
+            return False
+
+
 class QwenAPIClient:
-	def __init__(self, api_key=None, base_url=None, timeout=60, max_retries=3):
+	def __init__(self, api_key=None, base_url=None, timeout=60, max_retries=3, rate_limit=10):
 		"""
 		初始化Qwen API客户端
 
 		优先使用传入参数，其次使用环境变量 `QWEN_API_KEY`、`QWEN_BASE_URL`。
+		添加Token Bucket流控，默认10 requests/second。
 		"""
 		default_base = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
@@ -24,6 +49,9 @@ class QwenAPIClient:
 		self.api_key = api_key or os.environ.get('QWEN_API_KEY')
 		self.base_url = base_url or os.environ.get('QWEN_BASE_URL', default_base)
 		self.timeout = timeout
+
+		# Token Bucket for rate limiting
+		self.token_bucket = TokenBucket(rate=rate_limit, capacity=rate_limit * 2)
 
 		# 不在日志中打印完整API Key
 		masked_key = (self.api_key[:4] + '...' + self.api_key[-4:]) if self.api_key else 'None'
@@ -42,11 +70,12 @@ class QwenAPIClient:
 		if self.api_key:
 			self.headers["Authorization"] = f"Bearer {self.api_key}"
 
-		print(f"Qwen API客户端初始化完成，基础URL: {self.base_url}，api_key={masked_key}")
+		print(f"Qwen API客户端初始化完成，基础URL: {self.base_url}，api_key={masked_key}，rate_limit={rate_limit}/s")
 
 	def chat_completion(self, messages, model=None, temperature=0.3, max_tokens=2000):
 		"""
 		调用聊天补全接口
+		添加Token Bucket流控和指数退避重试。
 		"""
 		model = model or "qwen-max"
 
@@ -60,26 +89,44 @@ class QwenAPIClient:
 
 		url = f"{self.base_url}/chat/completions"
 
-		try:
-			print(f"正在调用模型: {model}，URL: {url}")
-			resp = self.session.post(url, headers=self.headers, json=payload, timeout=self.timeout)
-			if resp.status_code == 200:
-				result = resp.json()
-				if "choices" in result and len(result["choices"]) > 0:
-					reply = result["choices"][0]["message"]["content"]
-					print(f"API调用成功，返回token数: {result.get('usage', {}).get('total_tokens', '未知')}")
-					return reply
-				else:
-					print(f"API响应格式异常: {result}")
-					return None
-			else:
-				print(f"API调用失败，状态码: {resp.status_code}")
-				print(f"响应内容: {resp.text}")
-				return None
+		max_attempts = 5
+		base_delay = 1  # seconds
 
-		except Exception as e:
-			print(f"API调用异常: {e}")
-			return None
+		for attempt in range(max_attempts):
+			# Wait for token bucket
+			while not self.token_bucket.consume():
+				time.sleep(0.1)  # Wait 100ms before checking again
+
+			try:
+				print(f"正在调用模型: {model}，URL: {url}，尝试 {attempt + 1}/{max_attempts}")
+				resp = self.session.post(url, headers=self.headers, json=payload, timeout=self.timeout)
+				if resp.status_code == 200:
+					result = resp.json()
+					if "choices" in result and len(result["choices"]) > 0:
+						reply = result["choices"][0]["message"]["content"]
+						print(f"API调用成功，返回token数: {result.get('usage', {}).get('total_tokens', '未知')}")
+						return reply
+					else:
+						print(f"API响应格式异常: {result}")
+						return None
+				elif resp.status_code == 429:  # Rate limit exceeded
+					delay = base_delay * (2 ** attempt)  # Exponential backoff
+					print(f"QPS限流，等待 {delay} 秒后重试...")
+					time.sleep(delay)
+					continue
+				else:
+					print(f"API调用失败，状态码: {resp.status_code}")
+					print(f"响应内容: {resp.text}")
+					return None
+
+			except Exception as e:
+				delay = base_delay * (2 ** attempt)
+				print(f"API调用异常: {e}，等待 {delay} 秒后重试...")
+				time.sleep(delay)
+				continue
+
+		print("达到最大重试次数，API调用失败")
+		return None
 
 	def simple_chat(self, prompt, system_prompt=None, model=None):
 		messages = []

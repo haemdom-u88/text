@@ -268,11 +268,39 @@ function renderGraph(graph) {
         legend: [{ data: categories.map(c => c.name) }],
         series: [{
           type: 'graph', layout: 'force', roam: true, focusNodeAdjacency: true,
-          label: { show: true, position: 'right' },
-          force: { repulsion: 220, edgeLength: 90 },
-          data: nodeData, links: linkData, categories,
-          lineStyle: { color: '#aaa', width: 1 }, edgeSymbol: ['circle','arrow'], edgeSymbolSize: 8,
-          emphasis: { scale: true, lineStyle: { width: 3 }, label: { show: true } }
+          label: { show: true, position: 'right', fontSize: 12, color: '#333' },
+          force: { repulsion: 300, edgeLength: 120, gravity: 0.1 },
+          data: nodeData.map(node => ({
+            ...node,
+            symbolSize: Math.max(20, Math.min(80, node.symbolSize + (node.meta?.difficulty || 0) * 5)), // 根据难度调整体积
+            itemStyle: {
+              ...node.itemStyle,
+              borderWidth: 2,
+              borderColor: node.meta?.status === 'active' ? '#ff6b6b' : '#ddd',
+              shadowBlur: node.meta?.bloom_level ? 10 : 0,
+              shadowColor: node.itemStyle.color
+            },
+            animationDelay: Math.random() * 1000 // 随机动画延迟
+          })),
+          links: linkData.map(link => ({
+            ...link,
+            lineStyle: {
+              ...link.lineStyle,
+              width: link.meta?.confidence ? Math.max(1, link.meta.confidence * 3) : 1,
+              color: link.meta?.status === 'verified' ? '#4CAF50' : '#aaa',
+              curveness: 0.2,
+              type: 'solid' // 可以改为 'dashed' 表示推理关系
+            },
+            animation: link.meta?.status === 'new' // 新关系有粒子效果
+          })),
+          categories,
+          emphasis: {
+            scale: true,
+            lineStyle: { width: 5 },
+            label: { show: true, fontSize: 14, fontWeight: 'bold' }
+          },
+          animationDuration: 1500,
+          animationEasingUpdate: 'quinticInOut'
         }]
       };
       myChart.setOption(option, true);
